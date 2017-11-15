@@ -1,0 +1,48 @@
+#-*- coding: cp1252 -*-
+#importa as bibliotecas necessárias
+import serial
+import numpy
+import openpyxl
+import os
+import time
+import matplotlib.pyplot as plt
+import pandas as pd
+from pandas import DataFrame
+from drawnow import*
+
+x=[] # guarda os valores coletados através do Arduino
+y=[] # guarda os valores coletados através do Arduino
+dados = [] # guarda os valores coletados através do Arduino
+arduinoData= serial.Serial('COM3', 115200) #estabelece a comunicação serial 
+plt.ion() #ativa o modo interativo no matplotlib
+z=0  #inicia a variável x em 0
+i=input("Nº de pontos plotados:")  #abre uma entrada de dados
+
+def makeFig():    #cria a função makeFig
+    plt.plot(x, y, 'b.:')  # constrói o gráfico de y(x)
+    plt.grid(True)  #ativa a grade de fundo do gráfico
+    plt.grid('r', linestyle='--', linewidth=1)  #configura a grade
+    plt.title('y(x)')  #insere o título do gráfico
+    plt.ylim(0)  #insere o limite inferior do eixo y
+    plt.xlim(0)    #insere o limite inferior do eixo x
+    plt.xlabel('x')  # insere um título para o eixo x
+    plt.ylabel('y)') # insere um título para o eixo y
+
+while z<i:   #inicia um loop em função da variável i, definida fora do loop
+    if ( arduinoData.inWaiting()>0): #se houver comunicação serial, executa:
+        arduinoString = arduinoData.readline() #guarda os valores lidos em arduinoString
+        print arduinoString #escreve os valores lidos na porta serial
+        valorY, valorX = arduinoString.split(',') #separa arduinoString em dois objetos
+        x.append(long(valorX) ) #insere os valores de valorX na variável x
+        y.append(float(valorY) ) #insere os valores de valorY na variável y
+        dados.append(arduinoString) #insere os valores coletados na variável dados
+        z=z+1 #conta o número de interações com a porta serial
+        drawnow(makeFig)  #executa a ferramenta drawnow
+
+plt.show(makeFig)  #quando z>i, plota o gráfico com os dados adquiridos
+df = pd.DataFrame(dados) #insere todos os valores coletados em df
+df.to_excel('Aquisição.xlsx', 'Sheet1', index=False) #gera um xlsx com os valores de df
+
+while True:  #inicia um loop
+	time.sleep(1)   # gera uma pause de um segundo
+	pass
